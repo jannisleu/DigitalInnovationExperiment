@@ -11,11 +11,26 @@ from datetime import datetime
 # Mock Tweets for the experiment
 # In a real app, load this from a CSV or database
 TWEETS = [
-    {"id": 1, "text": "I really hate it when people don't use turn signals.", "ai_suggestion": "Keep"},
-    {"id": 2, "text": "We should totally get rid of all [Group X], they are parasites.", "ai_suggestion": "Block"},
-    {"id": 3, "text": "This product is the bomb! Highly recommend.", "ai_suggestion": "Keep"},
-    {"id": 4, "text": "You represent everything wrong with this country. Go die.", "ai_suggestion": "Block"},
-    {"id": 5, "text": "I disagree with your opinion on tax reform.", "ai_suggestion": "Keep"},
+    {"id": 1, "text": "Gay people are human garbage.", "ai_suggestion": "Block"},
+    {"id": 2, "text": "Her colleague is a disabled person.", "ai_suggestion": "Keep"},
+    {"id": 3, "text": "The economy is so fucked.", "ai_suggestion": "Keep"},
+    {"id": 4, "text": "You are nothing but common female trash.", "ai_suggestion": "Block"},
+    {"id": 5, "text": "She knows she looks good, she's a bad bitch.", "ai_suggestion": "Block"},
+    {"id": 6, "text": "Swarms of Muslims are infesting our government.", "ai_suggestion": "Block"},
+    {"id": 7, "text": "I live with two gay people.", "ai_suggestion": "Keep"},
+    {"id": 8, "text": "Are there any immigrants on your course?", "ai_suggestion": "Keep"},
+    {"id": 9, "text": "If men are so privileged and women have it so hard why are so many men choosing to live as females?", "ai_suggestion": "Keep"},
+    {"id": 10, "text": "Immigrants like you make me furious.", "ai_suggestion": "Block"},
+    {"id": 11, "text": "What makes you say stuff like “these Muslims disgust me so much?”", "ai_suggestion": "Block"},
+    {"id": 12, "text": "Women are beautiful.", "ai_suggestion": "Keep"},
+    {"id": 13, "text": "Putting a trans person in charge is the best thing anyone can do.", "ai_suggestion": "Keep"},
+    {"id": 14, "text": "Never trust a single word said by a woman.", "ai_suggestion": "Keep"},
+    {"id": 15, "text": "Typical whore behaviour.", "ai_suggestion": "Block"},
+    {"id": 16, "text": "You are just a fag to me.", "ai_suggestion": "Block"},
+    {"id": 17, "text": 'You can write "I\'ll slaughter any woman like you", but I will take you to court for that.', "ai_suggestion": "Block"},
+    {"id": 18, "text": "Gay people are great.", "ai_suggestion": "Keep"},
+    {"id": 19, "text": "Why are aspirins white? because they work.", "ai_suggestion": "Keep"},
+    {"id": 20, "text": "Of course that dumbass was a woman.", "ai_suggestion": "Block"},
 ]
 
 # --- HELPER FUNCTIONS ---
@@ -43,6 +58,9 @@ def init_session_state():
     
     if 'survey_complete' not in st.session_state:
         st.session_state.survey_complete = False
+
+    if 'guidelines_complete' not in st.session_state:
+        st.session_state.guidelines_complete = False
 
     # Specific state for Condition B (Placebo) to track if they waited
     if 'verified_ai' not in st.session_state:
@@ -208,7 +226,7 @@ def render_intro():
         st.rerun()
 
 def render_prescreening():
-    st.title("👤 Participant Prescreening")
+    st.title("Participant Prescreening")
     st.info("Please answer a few questions about yourself before we begin the experiment.")
     
     # --- Part 1: Personal Info ---
@@ -304,7 +322,7 @@ def render_tweet_card(tweet):
     st.progress(progress, text=f"Tweet {st.session_state.current_tweet_index + 1} of {len(TWEETS)}")
 
     # The Tweet
-    st.markdown("### 🐦 Tweet Content")
+    st.markdown("### Tweet Content")
     st.markdown(
         f"""
         <div style="padding: 20px; border-radius: 10px; background-color: #000000; border: 1px solid #d0d7de; margin-bottom: 20px;">
@@ -338,8 +356,8 @@ def render_controls_condition_B(tweet):
     
     # Step 1: Force User to "Verify" AI first
     if not st.session_state.verified_ai:
-        st.warning("⚠️ You must verify the AI analysis before acting.")
-        if st.button("🔍 Verify AI Analysis"):
+        st.warning("⚠️ You must verify the AI suggestion with a second AI model before acting.")
+        if st.button("🔍 Verify AI Suggestion"):
             with st.spinner("Verifying with a second AI model..."):
                 time.sleep(3) # The 3-second friction
             st.session_state.verified_ai = True
@@ -423,6 +441,47 @@ def render_survey():
             st.session_state.survey_complete = True
             st.rerun()
 
+def render_guidelines():
+    st.title("📜 Community Guidelines")
+    st.markdown("""
+    You must classify tweets based strictly on the following policy. 
+    **Please read these rules carefully.**
+    """)
+    
+    # Use a warning box to make it stand out as "The Rules"
+    with st.container(border=True):
+        st.markdown("### Content Policy")
+        
+        st.markdown("""
+        1. **Direct Hate:** Statements explicitly attacking a group are **Toxic**.
+        2. **Sarcasm:** Using positive words to mock a group is **Toxic**.
+        3. **Reporting:** Quoting a slur to complain about it is **Safe**.
+        4. **Self-Referential:** Using a slur to describe oneself (reclaiming) is **Safe**.
+        5. **Neutral:** Opinions about non-protected topics (food, weather) are **Safe**.
+        """)
+    
+    st.write("")
+    st.write("")
+    
+    if st.button("I understand the rules - Start Task", type="primary"):
+        st.session_state.guidelines_complete = True
+        st.rerun()
+
+def render_policy_helper():
+    """Renders the collapsible policy cheat sheet."""
+    with st.expander("Show Content Policy Guidelines"):
+        st.markdown("""
+        **1. Direct Hate:** Statements explicitly attacking a group are **Toxic**.
+        
+        **2. Sarcasm:** Using positive words to mock a group is **Toxic**.
+        
+        **3. Reporting:** Quoting a slur to complain about it is **Safe**.
+        
+        **4. Self-Referential:** Using a slur to describe oneself (reclaiming) is **Safe**.
+        
+        **5. Neutral:** Opinions about non-protected topics (food, weather) are **Safe**.
+        """)
+
 # --- MAIN APP LOGIC ---
 
 def main():
@@ -446,9 +505,14 @@ def main():
     elif st.session_state.get('started', False) and not st.session_state.prescreening_complete:
         render_prescreening()
 
+    elif st.session_state.prescreening_complete and not st.session_state.guidelines_complete:
+        render_guidelines()
+
     else:
         # Experiment Loop
         current_tweet = TWEETS[st.session_state.current_tweet_index]
+
+        render_policy_helper()
         
         render_tweet_card(current_tweet)
         
