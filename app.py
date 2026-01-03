@@ -34,9 +34,15 @@ def init_session_state():
         
     if 'responses' not in st.session_state:
         st.session_state.responses = []
+
+    if 'prescreening_complete' not in st.session_state:
+        st.session_state.prescreening_complete = False
         
     if 'experiment_complete' not in st.session_state:
         st.session_state.experiment_complete = False
+    
+    if 'survey_complete' not in st.session_state:
+        st.session_state.survey_complete = False
 
     # Specific state for Condition B (Placebo) to track if they waited
     if 'verified_ai' not in st.session_state:
@@ -92,6 +98,66 @@ def save_response(tweet_data, decision, reason=None):
     except Exception as e:
         st.error(f"Error saving to Google Sheets: {e}")
 
+def save_survey_results(answers):
+    """Saves the Likert scale answers to the 'Survey' tab."""
+    row_data = [
+        st.session_state.user_id,
+        datetime.now().isoformat(),
+        st.session_state.condition,
+        answers[0], answers[1], answers[2], 
+        answers[3], answers[4], answers[5]
+    ]
+
+    try:
+        # Load secrets and auth (same as before)
+        secrets = st.secrets["connections"]["gsheets"]
+        creds = Credentials.from_service_account_info(
+            secrets,
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        )
+        client = gspread.authorize(creds)
+        
+        # Open the specific 'Survey' tab
+        spreadsheet = client.open_by_url(secrets["spreadsheet"])
+        # CAREFUL: Make sure you created a tab named "Survey" in your Google Sheet!
+        worksheet = spreadsheet.worksheet("Survey") 
+        
+        worksheet.append_row(row_data)
+        
+    except Exception as e:
+        st.error(f"Error saving survey: {e}")
+        # Stop execution so the user sees the error
+        st.stop()
+
+def save_prescreening(age, gender, profession, field, likert_ans, freq_usage, freq_verify):
+    """Saves demographics to the 'Demographics' tab."""
+    row_data = [
+        st.session_state.user_id,
+        datetime.now().isoformat(),
+        st.session_state.condition,
+        age, gender, profession, field,
+        likert_ans[0], likert_ans[1], likert_ans[2], # The 3 Likert answers
+        freq_usage, freq_verify
+    ]
+
+    try:
+        secrets = st.secrets["connections"]["gsheets"]
+        creds = Credentials.from_service_account_info(
+            secrets,
+            scopes=["https://www.googleapis.com/auth/spreadsheets", "https://www.googleapis.com/auth/drive"]
+        )
+        client = gspread.authorize(creds)
+        
+        spreadsheet = client.open_by_url(secrets["spreadsheet"])
+        # Ensure you created this tab in your Google Sheet!
+        worksheet = spreadsheet.worksheet("Prescreening")
+        
+        worksheet.append_row(row_data)
+        
+    except Exception as e:
+        st.error(f"Error saving Prescreening: {e}")
+        st.stop()
+
 def next_tweet():
     """Move to next tweet or finish experiment."""
     st.session_state.current_tweet_index += 1
@@ -105,24 +171,130 @@ def next_tweet():
 # --- PAGE RENDERING ---
 
 def render_intro():
-    st.title("🛡️ Content Moderation Task")
+    st.title("AI-Assisted Content Moderation Study")
+    
     st.markdown("""
-    **Role:** You are a Moderator for a social media platform.
+    ### Welcome
+    You are invited to participate in a short research study on **Human-AI Decision Making**.
     
-    **Goal:** Classify tweets as **"Safe/Keep"** or **"Toxic/Block"**.
+    **Your Task:**
+    1. You will act as a **Moderator** for a social media platform.
+    2. You will review a series of tweets.
+    3. Your goal is to classify them as **Keep** (Safe) or **Block** (Toxic).
+    4. An **AI Assistant** will provide a suggestion for each tweet to help you.
+                
+    **Duration:**
+    The entire experiment will take approximately **10 minutes** to complete.
     
-    **Community Guidelines:**
-    1. **Block:** Hate speech, harassment, threats of violence.
-    2. **Keep:** Opinions, mild frustration, positive content.
+    ---
     
-    You will be assisted by an AI tool that analyzes the text and suggests an action.
+    ### 🔒 Privacy & Consent
+    * **Anonymous:** We do not collect names, emails, or IP addresses. You are assigned a random ID.
+    * **Data Usage:** Data is stored securely and used **only** for this academic experiment.
+    * **Voluntary:** You can stop at any time by closing the browser tab.
+    * **Risk:** The content contains simulated toxic tweets (hate speech/harassment) which may be offensive to some users.
     """)
     
-    st.info(f"Debug Info (Hidden in prod): You are assigned Condition **{st.session_state.condition}**")
+    st.write("") # Spacer
     
-    if st.button("Start Experiment", type="primary"):
+    # Consent Checkbox
+    consent = st.checkbox("I have read the information above and consent to participate in this study.")
+    
+    st.write("") # Spacer
+    
+    # Button is disabled unless consent is checked
+    if st.button("Begin Study", type="primary", disabled=not consent):
         st.session_state.started = True
         st.rerun()
+
+def render_prescreening():
+    st.title("👤 Participant Prescreening")
+    st.info("Please answer a few questions about yourself before we begin the experiment.")
+    
+    # --- Part 1: Personal Info ---
+    st.subheader("1. Profile")
+    age = st.number_input("Age", min_value=18, max_value=99, step=1, value=25)
+    gender = st.selectbox("Gender", ["Female", "Male", "Non-binary", "Prefer not to say", "Other"])
+    
+    profession = st.radio("Current Status", ["Student", "Professional", "Other"])
+    
+    # Conditional Input: Only show if Student
+    field_of_study = ""
+    if profession == "Student":
+        common_fields = [
+            "Computer Science / IT",
+            "Business / Economics",
+            "Engineering",
+            "Psychology",
+            "Medicine / Health Sciences",
+            "Law",
+            "Education",
+            "Biology / Life Sciences",
+            "Arts / Humanities",
+            "Social Sciences",
+            "Physics / Mathematics",
+            "Communications / Media",
+            "Political Science",
+            "Design / Architecture",
+            "History",
+            "Other"
+        ]
+        
+        selected_field = st.selectbox("Field of Study", common_fields)
+        
+        if selected_field == "Other":
+            field_of_study = st.text_input("Please specify your field:")
+        else:
+            field_of_study = selected_field
+    
+    st.write("---")
+    
+    # --- Part 2: AI Attitudes (Likert) ---
+    st.subheader("2. Attitudes towards AI")
+    st.caption("Rate your agreement (1 = Strongly Disagree, 7 = Strongly Agree)")
+    
+    questions = [
+        "I usually trust AI suggestions until I have a specific reason not to.",
+        "For the most part, I am skeptical of the outputs generated by AI.",
+        "I generally assume that modern AI tools are accurate."
+    ]
+    
+    likert_answers = []
+    for i, q in enumerate(questions):
+        st.markdown(f"**{q}**")
+        ans = st.radio(
+            f"demog_q{i}", 
+            options=[1, 2, 3, 4, 5, 6, 7], 
+            horizontal=True, 
+            index=3, # Defaults to neutral
+            key=f"likert_pre_{i}" # Unique key
+        )
+        likert_answers.append(ans)
+    
+    st.write("---")
+
+    # --- Part 3: Frequency ---
+    st.subheader("3. Usage Habits")
+    
+    q_freq = "How frequently do you use generative AI tools (e.g., ChatGPT, Gemini)?"
+    opts_freq = ["Never", "Less than Monthly", "Monthly", "Weekly", "Daily", "Multiple times a day"]
+    usage_freq = st.selectbox(q_freq, opts_freq)
+    
+    q_verify = "When using AI tools for information retrieval, how often do you verify the output with a second source?"
+    opts_verify = ["Never", "Rarely", "Sometimes", "Often", "Always"]
+    verify_freq = st.selectbox(q_verify, opts_verify)
+    
+    st.write("")
+    st.write("")
+    
+    if st.button("Start Experiment", type="primary"):
+        # Simple validation
+        if profession == "Student" and field_of_study.strip() == "":
+            st.error("Please enter your Field of Study.")
+        else:
+            save_prescreening(age, gender, profession, field_of_study, likert_answers, usage_freq, verify_freq)
+            st.session_state.prescreening_complete = True
+            st.rerun()
 
 def render_tweet_card(tweet):
     """Displays the tweet and the AI suggestion."""
@@ -168,7 +340,7 @@ def render_controls_condition_B(tweet):
     if not st.session_state.verified_ai:
         st.warning("⚠️ You must verify the AI analysis before acting.")
         if st.button("🔍 Verify AI Analysis"):
-            with st.spinner("Verifying against Community Guidelines..."):
+            with st.spinner("Verifying with a second AI model..."):
                 time.sleep(3) # The 3-second friction
             st.session_state.verified_ai = True
             st.rerun()
@@ -213,6 +385,44 @@ def render_controls_condition_C(tweet):
             save_response(tweet, "Keep", reason)
             next_tweet()
 
+def render_survey():
+    st.title("Post-Experiment Survey")
+    st.markdown("Please rate your agreement with the following statements regarding the task you just completed.")
+    st.markdown("**(1 = Strongly Disagree, 7 = Strongly Agree)**")
+    st.write("---")
+
+    questions = [
+        "I felt that I was the one controlling the moderation decisions.",
+        "The outcomes of the task were primarily determined by my actions, not the AI's.",
+        "The final decisions reflected my own judgment, regardless of the AI's suggestion.",
+        "I feel completely responsible for the consequences of the decisions made.",
+        "I felt like I was just an instrument in the hands of the AI.",
+        "I felt like a passive observer rather than an active decision-maker."
+    ]
+    
+    # We use a form so the page doesn't reload on every click
+    with st.form("survey_form"):
+        answers = []
+        for i, q in enumerate(questions):
+            st.markdown(f"**{q}**")
+            # Horizontal radio button usually looks best for Likert
+            ans = st.radio(
+                f"q{i}", 
+                options=[1, 2, 3, 4, 5, 6, 7], 
+                horizontal=True, 
+                label_visibility="collapsed",
+                index=3 # Default to neutral (4) to prevent NoneType errors, or remove to force choice
+            )
+            answers.append(ans)
+            st.write("") # Spacer
+
+        submitted = st.form_submit_button("Submit & Finish", type="primary")
+        
+        if submitted:
+            save_survey_results(answers)
+            st.session_state.survey_complete = True
+            st.rerun()
+
 # --- MAIN APP LOGIC ---
 
 def main():
@@ -220,17 +430,22 @@ def main():
     init_session_state()
 
     # Router
-    if st.session_state.experiment_complete:
+    if st.session_state.survey_complete:
         st.balloons()
         st.title("Experiment Complete")
         st.success("Thank you for your participation!")
         st.write("Your responses have been recorded.")
-        # Optional: Show them their own data
-        #st.dataframe(pd.DataFrame(st.session_state.responses))
         
     elif 'started' not in st.session_state:
         render_intro()
-        
+
+    elif st.session_state.experiment_complete:
+        render_survey()
+
+    # Only show if intro is done (started=True) but prescreening are NOT done
+    elif st.session_state.get('started', False) and not st.session_state.prescreening_complete:
+        render_prescreening()
+
     else:
         # Experiment Loop
         current_tweet = TWEETS[st.session_state.current_tweet_index]
