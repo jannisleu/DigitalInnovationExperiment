@@ -285,7 +285,8 @@ def render_prescreening():
             options=[1, 2, 3, 4, 5, 6, 7], 
             horizontal=True, 
             index=3, # Defaults to neutral
-            key=f"likert_pre_{i}" # Unique key
+            key=f"likert_pre_{i}", # Unique key
+            label_visibility="collapsed"
         )
         likert_answers.append(ans)
     
