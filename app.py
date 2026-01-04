@@ -380,9 +380,19 @@ def render_controls_condition_C(tweet):
     """High Friction: Justification Required."""
     st.subheader("Action")
     
+    policy_options = [
+        "", # Default empty option
+        "Direct Hate (Attacking a group)",
+        "Sarcasm (Mocking a group)",
+        "Reporting (Quoting hate to complain)",
+        "Self-Referential (Reclaiming slurs)",
+        "Neutral / Non-Protected Topic",
+        "Other / Unsure"
+    ]
+
     reason = st.selectbox(
-        "Select a justification for your decision:",
-        ["", "Hate Speech", "Harassment", "Spam", "Safe / Compliant", "Satire / Humor", "Other"],
+        "Select the applicable policy rule:",
+        policy_options,
         index=0
     )
     
