@@ -199,7 +199,7 @@ def render_intro():
     1. You will act as a **Moderator** for a social media platform.
     2. You will review a series of tweets.
     3. An **AI Assistant** will provide a suggestion for each tweet to help you.
-    4. You must decide to **Approve** or **Reject** each tweet based on the AI suggestion and your judgment.
+    4. You must decide to **Approve** or **Reject** the AI's suggestion based on community guidelines.
                 
     **Duration:**
     The entire experiment will take approximately **10 minutes** to complete.
@@ -343,11 +343,11 @@ def render_controls_condition_A(tweet):
     st.subheader("Action")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("❌ Reject", use_container_width=True):
+        if st.button("❌ Reject AI suggestion", use_container_width=True):
             save_response(tweet, "Reject")
             next_tweet()
     with col2:
-        if st.button("✅ Approve", use_container_width=True):
+        if st.button("✅ Approve AI suggestion", use_container_width=True):
             save_response(tweet, "Approve")
             next_tweet()
 
@@ -369,48 +369,55 @@ def render_controls_condition_B(tweet):
         st.success("Verification Complete. Please select an action.")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("❌ Reject", use_container_width=True):
+            if st.button("❌ Reject AI suggestion", use_container_width=True):
                 save_response(tweet, "Reject")
                 next_tweet()
         with col2:
-            if st.button("✅ Approve", use_container_width=True):
+            if st.button("✅ Approve AI suggestion", use_container_width=True):
                 save_response(tweet, "Approve")
                 next_tweet()
 
 def render_controls_condition_C(tweet):
-    """High Friction: Justification Required."""
+    """High Friction: Free Text Justification (Min 5 words)."""
     st.subheader("Action")
     
-    policy_options = [
-        "", # Default empty option
-        "Direct Hate (Attacking a group)",
-        "Sarcasm (Mocking a group)",
-        "Reporting (Quoting hate to complain)",
-        "Self-Referential (Reclaiming slurs)",
-        "Neutral / Non-Protected Topic",
-        "Other / Unsure"
-    ]
-
-    reason = st.selectbox(
-        "Select the applicable policy rule:",
-        policy_options,
-        index=0
+    st.markdown("To take action, please write a brief justification for your decision regarding the AI's suggestion.")
+    
+    # Text input area
+    # We use a specific key based on tweet ID to ensure the text clears when moving to the next tweet
+    reason = st.text_area(
+        "Why are you Approving or Rejecting this suggestion?",
+        height=100,
+        placeholder="E.g. This tweet contains specific hate speech against a group...",
+        key=f"reason_{tweet['id']}" 
     )
     
-    # Disable buttons if no reason is selected
-    # Note: Streamlit buttons allow a 'disabled' param
-    is_disabled = (reason == "")
+    # Word Count Logic
+    # Split by whitespace to count words, filter out empty strings
+    words = [w for w in reason.split() if w.strip()]
+    word_count = len(words)
+    min_words = 5
     
+    # Check validity
+    is_disabled = word_count < min_words
+    
+    # UI Feedback
     if is_disabled:
-        st.caption("Please select a reason to enable the action buttons.")
+        words_needed = min_words - word_count
+        st.caption(f"📝 **Please write at least {words_needed} more word(s) to unlock the buttons.**")
+    else:
+        st.success("✅ Length requirement met.")
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("❌ Reject", disabled=is_disabled, use_container_width=True):
+        # Button: Reject AI
+        if st.button("❌ Reject AI suggestion", disabled=is_disabled, use_container_width=True):
             save_response(tweet, "Reject", reason)
             next_tweet()
+            
     with col2:
-        if st.button("✅ Approve", disabled=is_disabled, use_container_width=True):
+        # Button: Approve AI
+        if st.button("✅ Approve AI suggestion", disabled=is_disabled, use_container_width=True):
             save_response(tweet, "Approve", reason)
             next_tweet()
 
@@ -469,6 +476,8 @@ def render_guidelines():
         3. **Reporting:** Quoting a slur to complain about it is **Safe**.
         4. **Self-Referential:** Using a slur to describe oneself (reclaiming) is **Safe**.
         5. **Neutral:** Opinions about non-protected topics (food, weather) are **Safe**.
+                    
+        You have to approve or reject the AI's suggestion based on these rules.
         """)
     
     st.write("")
@@ -491,6 +500,8 @@ def render_policy_helper():
         **4. Self-Referential:** Using a slur to describe oneself (reclaiming) is **Safe**.
         
         **5. Neutral:** Opinions about non-protected topics (food, weather) are **Safe**.
+                    
+        You have to approve or reject the AI's suggestion based on these rules.
         """)
 
 # --- MAIN APP LOGIC ---
