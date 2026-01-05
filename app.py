@@ -198,8 +198,8 @@ def render_intro():
     **Your Task:**
     1. You will act as a **Moderator** for a social media platform.
     2. You will review a series of tweets.
-    3. Your goal is to classify them as **Keep** (Safe) or **Block** (Toxic).
-    4. An **AI Assistant** will provide a suggestion for each tweet to help you.
+    3. An **AI Assistant** will provide a suggestion for each tweet to help you.
+    4. You must decide to **Approve** or **Reject** each tweet based on the AI suggestion and your judgment.
                 
     **Duration:**
     The entire experiment will take approximately **10 minutes** to complete.
@@ -210,7 +210,7 @@ def render_intro():
     * **Anonymous:** We do not collect names, emails, or IP addresses. You are assigned a random ID.
     * **Data Usage:** Data is stored securely and used **only** for this academic experiment.
     * **Voluntary:** You can stop at any time by closing the browser tab.
-    * **Risk:** The content contains simulated toxic tweets (hate speech/harassment) which may be offensive to some users.
+    * **Risk:** The content contains toxic tweets (hate speech/harassment) which may be offensive to some users.
     """)
     
     st.write("") # Spacer
@@ -343,12 +343,12 @@ def render_controls_condition_A(tweet):
     st.subheader("Action")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("❌ Block", use_container_width=True):
-            save_response(tweet, "Block")
+        if st.button("❌ Reject", use_container_width=True):
+            save_response(tweet, "Reject")
             next_tweet()
     with col2:
-        if st.button("✅ Keep", use_container_width=True):
-            save_response(tweet, "Keep")
+        if st.button("✅ Approve", use_container_width=True):
+            save_response(tweet, "Approve")
             next_tweet()
 
 def render_controls_condition_B(tweet):
@@ -369,12 +369,12 @@ def render_controls_condition_B(tweet):
         st.success("Verification Complete. Please select an action.")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("❌ Block", use_container_width=True):
-                save_response(tweet, "Block")
+            if st.button("❌ Reject", use_container_width=True):
+                save_response(tweet, "Reject")
                 next_tweet()
         with col2:
-            if st.button("✅ Keep", use_container_width=True):
-                save_response(tweet, "Keep")
+            if st.button("✅ Approve", use_container_width=True):
+                save_response(tweet, "Approve")
                 next_tweet()
 
 def render_controls_condition_C(tweet):
@@ -406,12 +406,12 @@ def render_controls_condition_C(tweet):
 
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("❌ Block", disabled=is_disabled, use_container_width=True):
-            save_response(tweet, "Block", reason)
+        if st.button("❌ Reject", disabled=is_disabled, use_container_width=True):
+            save_response(tweet, "Reject", reason)
             next_tweet()
     with col2:
-        if st.button("✅ Keep", disabled=is_disabled, use_container_width=True):
-            save_response(tweet, "Keep", reason)
+        if st.button("✅ Approve", disabled=is_disabled, use_container_width=True):
+            save_response(tweet, "Approve", reason)
             next_tweet()
 
 def render_survey():
