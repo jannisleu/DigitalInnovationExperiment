@@ -460,30 +460,64 @@ def render_survey():
             st.rerun()
 
 def render_guidelines():
-    st.title("📜 Community Guidelines")
+    st.title("📜 Community Guidelines & Task Tutorial")
+    
+    # --- SECTION 1: THE RULES ---
     st.markdown("""
     You must classify tweets based strictly on the following policy. 
     **Please read these rules carefully.**
     """)
     
-    # Use a warning box to make it stand out as "The Rules"
     with st.container(border=True):
         st.markdown("### Content Policy")
-        
         st.markdown("""
         1. **Direct Hate:** Statements explicitly attacking a group are **Toxic**.
         2. **Sarcasm:** Using positive words to mock a group is **Toxic**.
         3. **Reporting:** Quoting a slur to complain about it is **Safe**.
         4. **Self-Referential:** Using a slur to describe oneself (reclaiming) is **Safe**.
         5. **Neutral:** Opinions about non-protected topics (food, weather) are **Safe**.
-                    
-        You have to approve or reject the AI's suggestion based on these rules.
         """)
-    
+
+    st.write("---")
+
+    # --- SECTION 2: HOW TO PLAY (EXAMPLE) ---
+    st.subheader("🎓 How to perform the task")
+    st.markdown("For each tweet, you will see an **AI Suggestion**. Your job is to judge if the AI is right or wrong.")
+
+    # Create a visual example that looks like the real experiment
+    st.markdown("#### Example:")
+    with st.container(border=True):
+        # 1. The Mock Tweet
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #000000; border: 1px solid #d0d7de; margin-bottom: 15px;">
+            <p style="font-size: 16px; font-family: sans-serif; margin: 0; color: #ffffff;">I love hiking in the mountains on weekends! 🏔️</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 2. The Mock AI Suggestion
+        st.markdown("**🤖 AI Suggestion:** <span style='color:#0df05c; font-weight:bold;'>Keep</span>", unsafe_allow_html=True)
+        
+        st.divider()
+        
+        # 3. The Explanation
+        st.markdown("""
+        **Analysis:**
+        * The tweet is about a hobby (hiking). This falls under **Neutral / Safe**.
+        * The AI suggested **"Keep"** (which means Safe).
+        * Since the AI is correct, you would click **✅ Approve AI**.
+        """)
+        
+        # 4. Mock Buttons (Disabled)
+        c1, c2 = st.columns(2)
+        c1.button("❌ Reject AI", disabled=True, key="demo_rej")
+        c2.button("✅ Approve AI", disabled=True, key="demo_app")
+
+    st.info("💡 **Remember:** If the AI suggests 'Block' for a safe tweet (or vice versa), you must **Reject** the suggestion.")
+
     st.write("")
     st.write("")
     
-    if st.button("I understand the rules - Start Task", type="primary"):
+    if st.button("I understand the rules & task - Start Experiment", type="primary"):
         st.session_state.guidelines_complete = True
         st.rerun()
 
