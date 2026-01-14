@@ -459,7 +459,7 @@ def render_survey():
             st.session_state.survey_complete = True
             st.rerun()
 
-def render_guidelines():
+def render_guidelines_old():
     st.title("📜 Community Guidelines & Task Tutorial")
     
     # --- SECTION 1: THE RULES ---
@@ -511,6 +511,119 @@ def render_guidelines():
         c1, c2 = st.columns(2)
         c1.button("❌ Reject AI", disabled=True, key="demo_rej")
         c2.button("✅ Approve AI", disabled=True, key="demo_app")
+
+    st.info("💡 **Remember:** If the AI suggests 'Block' for a safe tweet (or vice versa), you must **Reject** the suggestion.")
+
+    st.write("")
+    st.write("")
+    
+    if st.button("I understand the rules & task - Start Experiment", type="primary"):
+        st.session_state.guidelines_complete = True
+        st.rerun()
+
+def render_guidelines():
+    st.title("📜 Community Guidelines & Task Tutorial")
+    
+    # Initialize a temporary state for the Condition B demo
+    if 'demo_b_verified' not in st.session_state:
+        st.session_state.demo_b_verified = False
+    
+    # --- SECTION 1: THE RULES ---
+    st.markdown("""
+    You must classify tweets based strictly on the following policy. 
+    **Please read these rules carefully.**
+    """)
+    
+    with st.container(border=True):
+        st.markdown("### Content Policy")
+        st.markdown("""
+        1. **Direct Hate:** Statements explicitly attacking a group are **Toxic**.
+        2. **Sarcasm:** Using positive words to mock a group is **Toxic**.
+        3. **Reporting:** Quoting a slur to complain about it is **Safe**.
+        4. **Self-Referential:** Using a slur to describe oneself (reclaiming) is **Safe**.
+        5. **Neutral:** Opinions about non-protected topics (food, weather) are **Safe**.
+        """)
+
+    st.write("---")
+
+    # --- SECTION 2: HOW TO PLAY (EXAMPLE) ---
+    st.subheader("🎓 How to perform the task")
+    st.markdown("For each tweet, you will see an **AI Suggestion**. Your job is to judge if the AI is right or wrong.")
+
+    st.markdown("#### Example:")
+    with st.container(border=True):
+        # 1. The Mock Tweet (Black Background / White Text)
+        st.markdown("""
+        <div style="padding: 15px; border-radius: 10px; background-color: #000000; border: 1px solid #d0d7de; margin-bottom: 15px;">
+            <p style="font-size: 16px; font-family: sans-serif; margin: 0; color: #ffffff;">I love hiking in the mountains on weekends! 🏔️</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 2. The Mock AI Suggestion
+        st.markdown("**🤖 AI Suggestion:** <span style='color:#0df05c; font-weight:bold;'>Keep</span>", unsafe_allow_html=True)
+        
+        st.divider()
+        
+        # 3. The Analysis
+        st.markdown("""
+        **Analysis:**
+        * The tweet is about a hobby (hiking). This falls under **Neutral / Safe**.
+        * The AI suggested **"Keep"** (Safe).
+        * Since the AI is correct, you should **Approve** it.
+        """)
+        
+        # 4. CONDITIONAL RENDERING (Interactive Demos)
+        st.markdown("#### Your Interface will look like this:")
+        
+        # --- Condition A: Standard ---
+        if st.session_state.condition == 'A':
+            st.caption("You will simply approve or reject the AI directly.")
+            c1, c2 = st.columns(2)
+            c1.button("❌ Reject AI", disabled=True, key="demo_a_rej", use_container_width=True)
+            c2.button("✅ Approve AI", disabled=True, key="demo_a_app", use_container_width=True)
+
+        # --- Condition B: Verify First (Interactive Demo) ---
+        elif st.session_state.condition == 'B':
+            st.caption("You must verify the analysis before the buttons appear. **Try clicking the button below:**")
+            
+            # State 1: Before Clicking Verify
+            if not st.session_state.demo_b_verified:
+                st.warning("⚠️ You must verify the AI suggestion with a second AI model before acting.")
+                
+                # Active button to simulate the wait
+                if st.button("🔍 Verify AI Suggestion (Click me to test)", key="demo_b_btn"):
+                    with st.spinner("Verifying with a second AI model..."):
+                        time.sleep(3) # Simulate the real 3-second friction
+                    st.session_state.demo_b_verified = True
+                    st.rerun()
+            
+            # State 2: After Verification
+            else:
+                st.success("Verification Complete. Please select an action.")
+                c1, c2 = st.columns(2)
+                # Buttons shown but disabled (visual only)
+                c1.button("❌ Reject AI", disabled=True, key="demo_b_rej", use_container_width=True)
+                c2.button("✅ Approve AI", disabled=True, key="demo_b_app", use_container_width=True)
+                
+                # Optional: Reset button if they want to see the animation again
+                if st.button("🔄 Reset Demo", type="secondary"):
+                    st.session_state.demo_b_verified = False
+                    st.rerun()
+
+        # --- Condition C: Text Input ---
+        elif st.session_state.condition == 'C':
+            st.caption("You must write a short justification (min 5 words) to unlock the buttons.")
+            st.text_area(
+                "Why are you Approving or Rejecting?",
+                value="The tweet is neutral and talks about hiking.", # Pre-filled example
+                height=100,
+                disabled=True,
+                key="demo_c_text"
+            )
+            st.success("✅ Length requirement met.")
+            c1, c2 = st.columns(2)
+            c1.button("❌ Reject AI", disabled=True, key="demo_c_rej", use_container_width=True)
+            c2.button("✅ Approve AI", disabled=True, key="demo_c_app", use_container_width=True)
 
     st.info("💡 **Remember:** If the AI suggests 'Block' for a safe tweet (or vice versa), you must **Reject** the suggestion.")
 
