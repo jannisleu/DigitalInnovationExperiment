@@ -322,6 +322,11 @@ def render_tweet_card(tweet):
     progress = st.session_state.current_tweet_index / len(TWEETS)
     st.progress(progress, text=f"Tweet {st.session_state.current_tweet_index + 1} of {len(TWEETS)}")
 
+    st.info(
+        "**Task:** Evaluate if the **AI Suggestion** is correct.\n\n"
+        "You are **Approving/Rejecting the AI suggestion**, not classifying the tweet yourself."
+    )
+
     # The Tweet
     st.markdown("### Tweet Content")
     st.markdown(
@@ -343,11 +348,11 @@ def render_controls_condition_A(tweet):
     st.subheader("Action")
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("❌ Reject AI suggestion", use_container_width=True):
+        if st.button("Reject AI suggestion", use_container_width=True):
             save_response(tweet, "Reject")
             next_tweet()
     with col2:
-        if st.button("✅ Approve AI suggestion", use_container_width=True):
+        if st.button("Approve AI suggestion", use_container_width=True):
             save_response(tweet, "Approve")
             next_tweet()
 
@@ -369,11 +374,11 @@ def render_controls_condition_B(tweet):
         st.success("Verification Complete. Please select an action.")
         col1, col2 = st.columns(2)
         with col1:
-            if st.button("❌ Reject AI suggestion", use_container_width=True):
+            if st.button("Reject AI suggestion", use_container_width=True):
                 save_response(tweet, "Reject")
                 next_tweet()
         with col2:
-            if st.button("✅ Approve AI suggestion", use_container_width=True):
+            if st.button("Approve AI suggestion", use_container_width=True):
                 save_response(tweet, "Approve")
                 next_tweet()
 
@@ -411,13 +416,13 @@ def render_controls_condition_C(tweet):
     col1, col2 = st.columns(2)
     with col1:
         # Button: Reject AI
-        if st.button("❌ Reject AI suggestion", disabled=is_disabled, use_container_width=True):
+        if st.button("Reject AI suggestion", disabled=is_disabled, use_container_width=True):
             save_response(tweet, "Reject", reason)
             next_tweet()
             
     with col2:
         # Button: Approve AI
-        if st.button("✅ Approve AI suggestion", disabled=is_disabled, use_container_width=True):
+        if st.button("Approve AI suggestion", disabled=is_disabled, use_container_width=True):
             save_response(tweet, "Approve", reason)
             next_tweet()
 
@@ -579,8 +584,8 @@ def render_guidelines():
         if st.session_state.condition == 'A':
             st.caption("You will simply approve or reject the AI directly.")
             c1, c2 = st.columns(2)
-            c1.button("❌ Reject AI", disabled=True, key="demo_a_rej", use_container_width=True)
-            c2.button("✅ Approve AI", disabled=True, key="demo_a_app", use_container_width=True)
+            c1.button("Reject AI", disabled=True, key="demo_a_rej", use_container_width=True)
+            c2.button("Approve AI", disabled=True, key="demo_a_app", use_container_width=True)
 
         # --- Condition B: Verify First (Interactive Demo) ---
         elif st.session_state.condition == 'B':
@@ -602,8 +607,8 @@ def render_guidelines():
                 st.success("Verification Complete. Please select an action.")
                 c1, c2 = st.columns(2)
                 # Buttons shown but disabled (visual only)
-                c1.button("❌ Reject AI", disabled=True, key="demo_b_rej", use_container_width=True)
-                c2.button("✅ Approve AI", disabled=True, key="demo_b_app", use_container_width=True)
+                c1.button("Reject AI", disabled=True, key="demo_b_rej", use_container_width=True)
+                c2.button("Approve AI", disabled=True, key="demo_b_app", use_container_width=True)
                 
                 # Optional: Reset button if they want to see the animation again
                 if st.button("🔄 Reset Demo", type="secondary"):
@@ -622,8 +627,8 @@ def render_guidelines():
             )
             st.success("✅ Length requirement met.")
             c1, c2 = st.columns(2)
-            c1.button("❌ Reject AI", disabled=True, key="demo_c_rej", use_container_width=True)
-            c2.button("✅ Approve AI", disabled=True, key="demo_c_app", use_container_width=True)
+            c1.button("Reject AI", disabled=True, key="demo_c_rej", use_container_width=True)
+            c2.button("Approve AI", disabled=True, key="demo_c_app", use_container_width=True)
 
     st.info("💡 **Remember:** If the AI suggests 'Block' for a safe tweet (or vice versa), you must **Reject** the suggestion.")
 
